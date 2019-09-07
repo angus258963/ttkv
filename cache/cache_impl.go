@@ -101,12 +101,17 @@ func (f *fifoStrategy) set(buffer map[string][]byte, key string, itemValue []byt
 	if sizeOfItem+f.size > f.maxCapcity {
 		// clear item from queue
 		for i, k := range f.queue {
+			if k == key {
+				// clear nothing when the item is input
+				continue
+			}
+			// clear item
 			v := buffer[k]
 			delete(buffer, k)
 			f.size -= (len(v) + len(k))
 
-			// check deleted items are enough
-			if sizeOfItem+f.size <= f.maxCapcity && k != key {
+			// check remain capcity is enough
+			if sizeOfItem+f.size <= f.maxCapcity {
 				f.queue = f.queue[i+1:]
 				break
 			}
