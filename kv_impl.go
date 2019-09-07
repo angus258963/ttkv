@@ -13,25 +13,22 @@ const (
 	shard = 256
 )
 
-type store struct {
+type Store struct {
 	get func(key string) []byte
 	set func(key string, value []byte)
 }
 
 type impl struct {
 	cache cache.Cache
-	store store
+	store Store
 	// each lock is used for each bucket of keys
 	locks []sync.RWMutex
 }
 
-func New(get func(key string) []byte) KV {
+func New(store Store, cache cache.Cache) KV {
 	return &impl{
-		cache: cache.NewCache(1*MB, cache.FIFO),
-		store: store{
-			get: get,
-			set: func(string, []byte) {},
-		},
+		cache: cache,
+		store: store,
 		locks: make([]sync.RWMutex, shard),
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/suite"
+
+	"github.com/angus258963/ttkv/cache"
 )
 
 type KVSuite struct {
@@ -21,10 +23,14 @@ func (s *KVSuite) SetupTest() {
 }
 
 func (s *KVSuite) TestGet() {
-	s.kv = New(func(key string) []byte {
-		time.Sleep(time.Millisecond * 100)
-		return []byte(key)
-	})
+	store := Store{
+		get: func(key string) []byte {
+			time.Sleep(time.Millisecond * 100)
+			return []byte(key)
+		},
+		set: func(key string, value []byte) {},
+	}
+	s.kv = New(store, cache.NewCache(1*MB, cache.FIFO))
 
 	// case: no cache
 	beforeTime := time.Now()
@@ -50,12 +56,16 @@ func (s *KVSuite) TestGet() {
 }
 
 func (s *KVSuite) TestFIFO() {
-	s.kv = New(func(key string) []byte {
-		time.Sleep(time.Millisecond * 100)
-		b := make([]byte, 256*1024-len(key))
-		copy(b, key)
-		return b
-	})
+	store := Store{
+		get: func(key string) []byte {
+			time.Sleep(time.Millisecond * 100)
+			b := make([]byte, 256*1024-len(key))
+			copy(b, key)
+			return b
+		},
+		set: func(key string, value []byte) {},
+	}
+	s.kv = New(store, cache.NewCache(1*MB, cache.FIFO))
 
 	// init cache
 	for i := 0; i < 4; i++ {
@@ -95,13 +105,16 @@ func (s *KVSuite) TestFIFO() {
 
 func (s *KVSuite) TestMultiThreadsGet() {
 	var miss int
-	s.kv = New(func(key string) []byte {
-		b := make([]byte, 1*1024-len(key))
-		copy(b, key)
-
-		miss++
-		return b
-	})
+	store := Store{
+		get: func(key string) []byte {
+			b := make([]byte, 1*1024-len(key))
+			copy(b, key)
+			miss++
+			return b
+		},
+		set: func(key string, value []byte) {},
+	}
+	s.kv = New(store, cache.NewCache(1*MB, cache.FIFO))
 
 	wg := sync.WaitGroup{}
 	for t := 0; t < 100; t++ {
@@ -119,9 +132,14 @@ func (s *KVSuite) TestMultiThreadsGet() {
 }
 
 func (s *KVSuite) TestMultiThreadsSet() {
-	s.kv = New(func(key string) []byte {
-		return []byte("test")
-	})
+	store := Store{
+		get: func(key string) []byte {
+			return []byte("test")
+
+		},
+		set: func(key string, value []byte) {},
+	}
+	s.kv = New(store, cache.NewCache(1*MB, cache.FIFO))
 
 	wg := sync.WaitGroup{}
 	for t := 0; t < 100; t++ {
