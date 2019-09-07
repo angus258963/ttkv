@@ -9,6 +9,7 @@ import (
 )
 
 const (
+	// shard is the number of locks
 	shard = 256
 )
 
@@ -20,6 +21,7 @@ type store struct {
 type impl struct {
 	cache cache.Cache
 	store store
+	// each lock is used for each bucket of keys
 	locks []sync.RWMutex
 }
 

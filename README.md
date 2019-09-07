@@ -10,13 +10,14 @@ import github.com/angus258963/ttkv
 // max capacity is 1 MB
 // default strategy is FIFO
 kv := ttkv.New(func(key string) []byte {
-		return []byte(key)
+  return []byte(key)
 })
   
-v := kv.Get("123") // cache miss
-v = kv.Get("123") // cache hit
-kv.Set("456", []byte("456"))
-v = kv.Get("456") // cache hit
+v, err := kv.Get("123") // cache miss
+v, err = kv.Get("123") // cache hit
+err = kv.Set("456", []byte("456"))
+v, err = kv.Get("456") // cache hit
+
 ```
 
 ### Test: 

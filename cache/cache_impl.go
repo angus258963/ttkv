@@ -5,6 +5,7 @@ import (
 )
 
 const (
+	// maxValueSize maximum size of item(key+value)
 	maxValueSize = 1 * 1024 * 1024 // 1MB
 )
 
@@ -46,6 +47,7 @@ func (im *cacheImpl) Set(key string, value []byte) error {
 	im.lock.Lock()
 	defer im.lock.Unlock()
 
+	// check input item is no more than maxValueSize
 	if len(key)+len(value) > maxValueSize {
 		return ErrMaxValueSize
 	}
@@ -111,7 +113,7 @@ func (f *fifoStrategy) set(buffer map[string][]byte, key string, itemValue []byt
 		}
 	}
 
-	// if key is not in the queue
+	// make sure no duplicated key in queue
 	if !ok {
 		f.queue = append(f.queue, key)
 	}
